@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 
+import prismadb from "@/lib/prismadb";
+
 import { checkApiLimit, incrementApiLimit } from "@/lib/api-limit";
 import { checkSubscription } from "@/lib/subscription";
 
@@ -72,7 +74,7 @@ export async function GET() {
 			return new NextResponse("No cloud storage for free trial. Please upgrade to pro.", { status: 404 });
 		}
 
-		const messages = await prisma.message.findMany({
+		const messages = await prismadb.message.findMany({
 			where: {
 				userId,
 				type: "code",
@@ -111,7 +113,7 @@ export async function PUT(req: Request) {
 			return new NextResponse("No cloud storage for free trial. Please upgrade to pro.", { status: 404 });
 		}
 
-		const message = await prisma.message.create({
+		const message = await prismadb.message.create({
 			data: {
 				userId,
 				type: "code",

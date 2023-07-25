@@ -1,4 +1,4 @@
-import { Cloud, Code, ImageIcon, MessageSquare, Music, VideoIcon } from "lucide-react";
+import { Code, ImageIcon, MessageSquare, Music, VideoIcon } from "lucide-react";
 
 export const MAX_FREE_COUNTS = 5;
 
@@ -37,12 +37,5 @@ export const tools = [
 		color: "text-green-700",
 		bgColor: "bg-green-700/10",
 		href: "/code",
-	},
-	{
-		label: "Cloud Storage",
-		icon: Cloud,
-		color: "text-blue-700",
-		bgColor: "bg-blue-700/10",
-		href: "",
 	},
 ];
