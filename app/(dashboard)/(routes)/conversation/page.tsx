@@ -4,7 +4,7 @@ import axios from "axios";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChatCompletionRequestMessage } from "openai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import * as z from "zod";
@@ -40,10 +40,13 @@ const ConversationPage = () => {
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
 			const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
-			const newMessages = [...messages, userMessage];
+			const newMessages = [userMessage];
 
 			const response = await axios.post("/api/conversation", { messages: newMessages });
-			setMessages((current) => [...current, userMessage, response.data]);
+			// send user message and bot response to the server
+			await axios.put("/api/conversation", { botMessage: response.data.content, userMessage: values.prompt });
+
+			setMessages((messages) => [response.data, userMessage, ...messages]);
 
 			form.reset();
 		} catch (error: any) {
@@ -51,11 +54,34 @@ const ConversationPage = () => {
 				proModal.onOpen();
 			} else {
 				toast.error("Something went wrong.");
+				console.log(error);
 			}
 		} finally {
 			router.refresh();
 		}
 	};
+
+	const fetchConversation = async () => {
+		try {
+			const response = await axios.get("/api/conversation");
+			console.log(response.data);
+			setMessages(response.data);
+		} catch (error: any) {
+			if (error?.response?.status === 404) {
+				return;
+			} else {
+				if (process.env.NODE_ENV === "development") {
+					console.log(error);
+				}
+			}
+		} finally {
+			router.refresh();
+		}
+	};
+
+	useEffect(() => {
+		fetchConversation();
+	}, []);
 
 	return (
 		<div>

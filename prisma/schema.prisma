@@ -30,8 +30,8 @@ model Message {
   id                 String            @id @default(cuid())
   userId             String
   type               String
-  title              String
   content            String
+  role               String            @default("user")
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   UserSubscription   UserSubscription? @relation(fields: [userSubscriptionId], references: [id])

@@ -90,14 +90,14 @@ export async function PUT(req: Request) {
 	try {
 		const { userId } = auth();
 		const body = await req.json();
-		const { content, title } = body;
+		const { userMessage, botMessage } = body;
 
 		if (!userId) {
 			return new NextResponse("Unauthorized", { status: 401 });
 		}
 
-		if (!content || !title) {
-			return new NextResponse("Content and title is required", { status: 400 });
+		if (!userMessage || !botMessage) {
+			return new NextResponse("Both user message and bot message is required.", { status: 400 });
 		}
 
 		const freeTrial = await checkApiLimit();
@@ -107,16 +107,27 @@ export async function PUT(req: Request) {
 			return new NextResponse("No cloud storage for free trial. Please upgrade to pro.", { status: 404 });
 		}
 
-		const message = await prismadb.message.create({
+		const newUserMessage = await prismadb.message.create({
 			data: {
 				userId,
 				type: "conversation",
-				title,
-				content,
+				content: userMessage,
+				role: "user",
 			},
 		});
 
-		return new NextResponse(JSON.stringify(message));
+		const newBotMessage = await prismadb.message.create({
+			data: {
+				userId,
+				type: "conversation",
+				content: botMessage,
+				role: "assistant",
+			},
+		});
+
+		return new NextResponse(null, {
+			status: 200,
+		});
 	} catch (error) {
 		console.log("[CODE_ERROR]", error);
 		return new NextResponse("Internal Error", { status: 500 });

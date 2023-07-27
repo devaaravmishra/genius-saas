@@ -4,7 +4,7 @@ import axios from "axios";
 import { Code } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChatCompletionRequestMessage } from "openai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
@@ -41,10 +41,12 @@ const CodePage = () => {
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
 			const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
-			const newMessages = [...messages, userMessage];
+			const newMessages = [userMessage];
 
 			const response = await axios.post("/api/code", { messages: newMessages });
-			setMessages((current) => [...current, userMessage, response.data]);
+			await axios.put("/api/code", { botMessage: response.data.content, userMessage: values.prompt });
+
+			setMessages((current) => [response.data, userMessage, ...current]);
 
 			form.reset();
 		} catch (error: any) {
@@ -57,6 +59,25 @@ const CodePage = () => {
 			router.refresh();
 		}
 	};
+
+	const fethMessages = async () => {
+		try {
+			const response = await axios.get("/api/code");
+			setMessages(response.data);
+		} catch (error: any) {
+			if (error?.response?.status === 403) {
+				return;
+			} else {
+				if (process.env.NODE_ENV === "development") {
+					console.log(error);
+				}
+			}
+		}
+	};
+
+	useEffect(() => {
+		fethMessages();
+	}, []);
 
 	return (
 		<div>
