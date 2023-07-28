@@ -55,6 +55,7 @@
 	},
 	"devDependencies": {
 		"@tanstack/react-query-devtools": "^4.32.0",
+		"dayjs": "^1.11.9",
 		"prisma": "^5.0.0"
 	}
 }
