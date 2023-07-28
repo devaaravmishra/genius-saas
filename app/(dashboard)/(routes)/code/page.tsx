@@ -22,12 +22,14 @@ import { useProModal } from "@/hooks/use-pro-modal";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Message } from "@prisma/client";
+import dayjs from "dayjs";
 import { formSchema } from "./constants";
 
 const CodePage = () => {
 	const router = useRouter();
 	const proModal = useProModal();
-	const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+	const [messages, setMessages] = useState<Message[]>([]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -40,13 +42,31 @@ const CodePage = () => {
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
-			const newMessages = [userMessage];
+			const prompt: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
+			const newMessages = [prompt];
 
 			const response = await axios.post("/api/code", { messages: newMessages });
 			await axios.put("/api/code", { botMessage: response.data.content, userMessage: values.prompt });
 
-			setMessages((current) => [response.data, userMessage, ...current]);
+			const userMessage = {
+				createdAt: new Date(),
+				id: Math.random().toString(),
+				updatedAt: new Date(),
+				content: values.prompt,
+				role: "user",
+				type: "code",
+			} as Message;
+
+			const botMessage = {
+				createdAt: new Date(),
+				id: Math.random().toString(),
+				updatedAt: new Date(),
+				content: response.data.content as string,
+				role: "assistant",
+				type: "code",
+			} as Message;
+
+			setMessages((current) => [botMessage, userMessage, ...current]);
 
 			form.reset();
 		} catch (error: any) {
@@ -157,6 +177,11 @@ const CodePage = () => {
 								>
 									{message.content || ""}
 								</ReactMarkdown>
+								{message?.createdAt && (
+									<div className=" text-xs text-gray-500 mt-2 ms-auto min-w-max">
+										{dayjs(message.createdAt).format("MMM D, h:mm A")}
+									</div>
+								)}
 							</div>
 						))}
 					</div>

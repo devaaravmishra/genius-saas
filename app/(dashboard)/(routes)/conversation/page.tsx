@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import dayjs from "dayjs";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChatCompletionRequestMessage } from "openai";
@@ -21,12 +22,13 @@ import { useProModal } from "@/hooks/use-pro-modal";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Message } from "@prisma/client";
 import { formSchema } from "./constants";
 
 const ConversationPage = () => {
 	const router = useRouter();
 	const proModal = useProModal();
-	const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+	const [messages, setMessages] = useState<Omit<Message[], "UserSubscription" | "userSubscriptionId">>([]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -39,14 +41,32 @@ const ConversationPage = () => {
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
-			const newMessages = [userMessage];
+			const prompt: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
+			const newMessages = [prompt];
 
-			const response = await axios.post("/api/conversation", { messages: newMessages });
+			const response = await axios.post<ChatCompletionRequestMessage>("/api/conversation", { messages: newMessages });
 			// send user message and bot response to the server
 			await axios.put("/api/conversation", { botMessage: response.data.content, userMessage: values.prompt });
 
-			setMessages((messages) => [response.data, userMessage, ...messages]);
+			const userMessage = {
+				createdAt: new Date(),
+				id: Math.random().toString(),
+				updatedAt: new Date(),
+				content: values.prompt,
+				role: "user",
+				type: "conversation",
+			} as Message;
+
+			const botMessage = {
+				createdAt: new Date(),
+				id: Math.random().toString(),
+				updatedAt: new Date(),
+				content: response.data.content as string,
+				role: "assistant",
+				type: "conversation",
+			} as Message;
+
+			setMessages((messages) => [botMessage, userMessage, ...messages] as Message[]);
 
 			form.reset();
 		} catch (error: any) {
@@ -149,6 +169,11 @@ const ConversationPage = () => {
 							>
 								{message.role === "user" ? <UserAvatar /> : <BotAvatar />}
 								<p className="text-sm">{message.content}</p>
+								{message?.createdAt && (
+									<div className=" text-xs text-gray-500 mt-2 ms-auto min-w-max">
+										{dayjs(message.createdAt).format("MMM D, h:mm A")}
+									</div>
+								)}
 							</div>
 						))}
 					</div>

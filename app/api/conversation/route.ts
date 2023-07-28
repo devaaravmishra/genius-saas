@@ -107,7 +107,7 @@ export async function PUT(req: Request) {
 			return new NextResponse("No cloud storage for free trial. Please upgrade to pro.", { status: 404 });
 		}
 
-		const newUserMessage = await prismadb.message.create({
+		await prismadb.message.create({
 			data: {
 				userId,
 				type: "conversation",
@@ -116,7 +116,7 @@ export async function PUT(req: Request) {
 			},
 		});
 
-		const newBotMessage = await prismadb.message.create({
+		await prismadb.message.create({
 			data: {
 				userId,
 				type: "conversation",
