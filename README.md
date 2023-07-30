@@ -103,6 +103,10 @@ or
 yarn dev
 ```
 
+## Screenshots
+<img width="1469" alt="Screenshot 2023-07-28 at 10 37 17 PM" src="https://github.com/aaaravv/genius-saas/assets/66662179/a363de4a-47d2-4cc6-aa4f-0bf640960bd6">
+<img width="1470" alt="Screenshot 2023-07-28 at 11 01 59 PM" src="https://github.com/aaaravv/genius-saas/assets/66662179/c506d422-57b8-48b6-83bf-c26a07dd8fd5">
+
 ## Configuration
 
 The application uses [Clerk](https://clerk.dev/) for authentication and user management. You can sign up for a free Clerk account [here](https://dashboard.clerk.dev/).
